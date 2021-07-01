@@ -17,22 +17,31 @@ bot.on("message", async message => {
 
     const args = message.content.slice(prefix.length).trim().split(" ");
     const command = args.shift().toLowerCase();
-    /*
-        while(true) {
-            await delay(10000);
-            message.channel.send(userd.user + randomMuck);
-            console.info(userd.user.id + "pinged");
-        };
-    */
-   
     if (command == "ping") {
         console.log("logged");
         message.channel.send("<@"+ message.guild.members.cache.random().user +"> " +randomMuck());
-    }
-
-    if(command == "code") {
-        
-    }
+    } else if(command == "code") {
+        message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
+        try {
+            bot.channels.cache.find(channel => channel.name === "muck-code").send("hello");
+            if(!message.guild.channels.cache.find('muck-code')) {
+                message.guild.channels.create("muck-code", {
+                    type: "text", 
+                    permissionOverwrites: [
+                        {
+                        id: message.guild.roles.everyone, 
+                        allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
+                        deny: ['SEND_MESSAGES']
+                        }
+                    ],
+                })
+                message.channel.send("No code channel was found so I created one. Check #muck-code")
+                return;
+            }
+        } catch (e) {
+            return;
+        }
+    } 
 });
 
 
