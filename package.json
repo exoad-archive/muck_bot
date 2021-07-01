@@ -1,0 +1,14 @@
+{
+  "name": "muck_bot",
+  "version": "0.0.1",
+  "description": "Muck Discord Bot (Meme bot)",
+  "main": "app.js",
+  "scripts": {
+    "test": "node ."
+  },
+  "keywords": [
+    "muck"
+  ],
+  "author": "",
+  "license": "MIT"
+}
