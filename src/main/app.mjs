@@ -1,10 +1,13 @@
 import { randomMuck, tokenCall } from "./mdl/readers.mjs";
-import { Client, Message } from "discord.js";
+import { Client, Message, MessageEmbed } from "discord.js";
 import colors from "colors";
 import read from "read-file";
 import delay from "delay";
+import pkg from 'discord-buttons'
 
+const disbut = pkg;
 const bot = new Client();
+disbut(bot);
 
 var prefix = "muck";
 
@@ -14,16 +17,15 @@ bot.on("ready", async () => {
 
 bot.on("message", async message => {
     if (!message.content.startsWith(prefix) || message.author.bot) return;
-
     const args = message.content.slice(prefix.length).trim().split(" ");
     const command = args.shift().toLowerCase();
     if (command == "ping") {
         console.log("logged");
         message.channel.send("<@"+ message.guild.members.cache.random().user +"> " +randomMuck());
     } else if(command == "code") {
-        message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
+        var code = args.slice(0).join(' ');
+        if(!code || code.length > 18 || code == undefined || isNaN(code)) return message.reply("check the code, don't think its a valid one. usage for this command: `"+ prefix +" code <muck_code>`");
         try {
-            bot.channels.cache.find(channel => channel.name === "muck-code").send("hello");
             if(!message.guild.channels.cache.find('muck-code')) {
                 message.guild.channels.create("muck-code", {
                     type: "text", 
@@ -38,10 +40,30 @@ bot.on("message", async message => {
                 message.channel.send("No code channel was found so I created one. Check #muck-code")
                 return;
             }
+            message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
+            bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => {
+                await delay(6000);
+                m.edit("**Muck Code:** " + code)
+            })
         } catch (e) {
             return;
         }
-    } 
+    } else if(command == "what" || command == "steam") {
+        let embed = new MessageEmbed()
+            .setTitle("Muck")
+            .setColor('RANDOM')
+            .setDescription("Trapped in the muck on an island, alone or with your friends, try to survive as long as possible by using the resources you find around the island.Collect resources, craft tools, weapons, & armor, find items & build your base during day. But once night falls, mysterious enemies appear from the shadows. Using the resources and items you've crafted during the day, you must try and make it through the night.Island throws you and your friends into a fun and action packed experience on a procedurally generated island. Do you have what it takes to survive?")
+            .addField("Developer & Publisher", "Dani")
+        
+        let viewOnSteam = new disbut.MessageButton()
+            .setStyle('url')
+            .setURL('https://store.steampowered.com/app/1625450/Muck/') 
+            .setLabel('View on Steam') 
+        message.channel.send(embed);
+        message.channel.send('___', viewOnSteam)
+    } else if(command == "help") {
+
+    }
 });
 
 

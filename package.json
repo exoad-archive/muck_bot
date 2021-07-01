@@ -14,6 +14,7 @@
   "dependencies": {
     "colors": "^1.4.0",
     "delay": "^5.0.0",
+    "discord-buttons": "^3.2.1",
     "discord.js": "^12.5.3",
     "read-file": "^0.2.0"
   },

@@ -14,3 +14,13 @@ export function randomMuck() {
 export function tokenCall() {
     return callTken();
 }
+export function noCall() {
+    var arr = [
+        "bruh type something",
+        "cant use an empty command",
+        "look at the list of commands bruh",
+        "blind",
+        "commands list is as follows bruh"
+    ];
+    return arr[Math.floor(Math.random()*arr.length)];
+}
