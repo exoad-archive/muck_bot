@@ -1,4 +1,4 @@
-import { randomMuck, tokenCall } from 'modules/readers.mjs'
+import { randomMuck, tokenCall } from './mdl/readers.mjs'
 import { Client, Message } from 'discord.js'
 import colors from 'colors'
 import read from 'read-file'
