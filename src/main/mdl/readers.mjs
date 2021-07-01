@@ -9,9 +9,8 @@ export function randomMuck() {
         "pls hop on muck",
         "muck"
     ];
-    return arr[Math.floor(Math.random()*arr.length)];
+    chart = arr[Math.floor(Math.random()*arr.length)];
 }
-
 export function tokenCall() {
     return callTken();
 }
