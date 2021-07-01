@@ -19,20 +19,21 @@ bot.on("message", async message => {
     if (!message.content.startsWith(prefix) || message.author.bot) return;
     const args = message.content.slice(prefix.length).trim().split(" ");
     const command = args.shift().toLowerCase();
+    // TODO: actually make this like random ==> .ra
     if (command == "ping") {
-        console.log("logged");
         message.channel.send("<@"+ message.guild.members.cache.random().user +"> " +randomMuck());
+    // TODO: update todo timer
     } else if(command == "code") {
         var code = args.slice(0).join(' ');
         if(!code || code.length > 18 || code == undefined || isNaN(code)) return message.reply("check the code, don't think its a valid one. usage for this command: `"+ prefix +" code <muck_code>`");
         try {
-            if(!message.guild.channels.cache.find('muck-code')) {
+            if(!message.guild.channels.cache.find('muck-code')) { //creats the desired channel to store new codes and post new codes
                 message.guild.channels.create("muck-code", {
                     type: "text", 
                     permissionOverwrites: [
                         {
                         id: message.guild.roles.everyone, 
-                        allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'],
+                        allow: ['VIEW_CHANNEL', 'READ_MESSAGE_HISTORY'], //read only code channel
                         deny: ['SEND_MESSAGES']
                         }
                     ],
@@ -41,7 +42,9 @@ bot.on("message", async message => {
                 return;
             }
             message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
-            bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => {
+            bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => { //applied the desired marks to the posted code
+                m.react(':white_check_mark:');
+                m.react(':negative_squared_cross_mark:');
                 await delay(6000);
                 m.edit("**Muck Code:** " + code)
             })
