@@ -65,7 +65,11 @@ bot.on("message", async message => {
         message.channel.send(embed);
         message.channel.send('___', viewOnSteam)
     } else if(command == "help") {
+        let embed = new MessageEmbed()
+            .setTitle("Commands")
+            .addField("Avaliable cmds", "```steam, help, code```")
 
+        message.channel.send(embed)
     }
 });
 
