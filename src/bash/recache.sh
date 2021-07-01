@@ -1,0 +1,114 @@
+set -e
+
+# check version of install-node
+install_v=$(node -e "console.log(($(cat $(dirname $0)/../package.json)).version.split('.')[0])")
+
+main_file="$(dirname $0)/../bin/install_node"
+version_file="$(dirname $0)/../cache/v${install_v}/node-versions"
+versions=( $(cat "$version_file") )
+dest="s3://mapbox/vendor/nodejs"
+apps_dest="s3://mapbox/apps/install-node"
+tmp=$(mktemp -d -t install-node.XXXXXX)
+gitsha=$(cd $(dirname $0)  && git rev-parse HEAD)
+
+function cachefile() {
+    local filename=$1
+    local localname=$(echo $1 | tr '/' '-')
+    local nv=$2
+
+    if wget -q -O $localname "http://nodejs.org/dist/v$nv/$filename"; then
+        md5sum "$localname" > "$localname.md5"
+    else
+        echo "$filename not found at http://nodejs.org/dist/v$nv/$filename" && return 0
+    fi
+
+    # RHEL/centos7 does not ship with a parent shasum function.
+    # Fallback to sha1sum if not found.
+    shasum=""
+    if which shasum > /dev/null; then
+        shasum=$(which shasum)
+    elif which sha1sum > /dev/null; then
+        shasum=$(which sha1sum)
+    fi
+
+    # Check that shasum of tarball is present
+    echo "Verifying nodejs shasum"
+    if [ ! -z $(echo "$SHASUMFILE" | grep 256) ]; then
+        node_shasum="$($shasum -a 256 $localname | grep -oE '^[0-9a-f]+')"
+    else
+        node_shasum="$($shasum $localname | grep -oE '^[0-9a-f]+')"
+    fi
+    grep "$node_shasum" "$SHASUMFILE"
+
+    # Check if file already exists on s3
+    if aws s3 cp "$dest/v$nv/$filename.md5" "./$localname-online.md5" > /dev/null 2>&1; then
+        if md5sum -c $localname-online.md5; then
+            echo "$filename unchanged"
+            return 0
+        fi
+    fi
+
+    aws s3 cp --acl public-read "$localname"      "$dest/v$nv/$filename"
+    aws s3 cp --acl public-read "$localname.md5"  "$dest/v$nv/$filename.md5"
+}
+
+# Add trusted gpg keys for verifying nodejs downloads
+if which gpg > /dev/null; then
+    # from https://github.com/nodejs/node#verifying-binaries,
+    # keyserver list taken from the nodejs v10.x Dockerfile
+    for key in \
+        94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
+        FD3A5288F042B6850C66B31F09FE44734EB7990E \
+        71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
+        DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
+        C4F0DFFF4E8C1A8236409D08E73BC641CC11F4C8 \
+        B9AE9905FFD7803F25714661B63B535A4C206CA9 \
+        77984A986EBC2AA786BC0F66B01FBB92821C587A \
+        8FCCA13FEF1D0C2E91008E09770F7A9A5AE15600 \
+        4ED778F539E3634C779C87C6D7062848A1AB005C \
+        A48C2BEE680E841632CD4E44F07496B3EB3C1762 \
+        B9E2F5981AA6E0CD28160D9FF13993A75599653C \
+        ; do
+        gpg --batch --keyserver hkps://keyserver.ubuntu.com --recv-keys "$key" ||
+            gpg --batch --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys "$key" ||
+            gpg --batch --keyserver hkp://ipv4.pool.sks-keyservers.net --recv-keys "$key" ||
+            gpg --batch --keyserver hkp://pgp.mit.edu:80 --recv-keys "$key" ;
+    done
+else
+    echo "!WARN! gpg not found. Please install and try again" && exit 1
+fi
+
+aws s3 cp --acl public-read "$main_file"           $apps_dest/$gitsha/run
+aws s3 cp --acl public-read "$version_file"        $apps_dest/cache/v${install_v}/
+
+if git describe --tags --exact-match 2> /dev/null; then
+    tag=$(git describe --tags --exact-match)
+    aws s3 cp --acl public-read "$main_file" $apps_dest/$tag/run
+    # latest major versions tagged always available at /latest/run
+    aws s3 cp --acl public-read "$main_file" $apps_dest/latest/run
+fi
+
+cd "$tmp"
+
+# Cache node.js packages to S3
+for nv in "${versions[@]}"; do
+    echo "Caching Node.js v$nv to S3"
+
+    # Verify signed SHASUMS file to ensure it can be trusted
+    # Versions after 4.0.0 use shasum's 256 algorithm, check for both
+    SHASUMFILE="SHASUMS.txt.asc"
+    if ! wget -q -O $SHASUMFILE "http://nodejs.org/dist/v$nv/$SHASUMFILE"; then
+        echo "$SHASUMFILE not found" && rm $SHASUMFILE
+        SHASUMFILE="SHASUMS256.txt.asc"
+        if ! wget -q -O $SHASUMFILE "http://nodejs.org/dist/v$nv/$SHASUMFILE"; then
+            echo "$SHASUMFILE not found. No SHASUM file found for v$nv, exiting." && exit 1
+        fi
+    fi
+
+    echo "Verifying signature of nodejs SHASUMS.txt.asc"
+    gpg --verify < $SHASUMFILE
+
+    cachefile node-v$nv-linux-x64.tar.gz $nv
+    cachefile node-v$nv-darwin-x64.tar.gz $nv
+    rm ./*
+done
