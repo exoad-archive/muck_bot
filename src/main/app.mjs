@@ -39,15 +39,23 @@ bot.on("message", async message => {
                     ],
                 })
                 message.channel.send("No code channel was found so I created one. Check #muck-code")
+                message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
+                bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => { //applied the desired marks to the posted code
+                    m.react(':white_check_mark:');
+                    m.react(':negative_squared_cross_mark:');
+                    await delay(6000);
+                    m.edit("**Muck Code:** " + code)
+                })
                 return;
+            } else if(message.guild.channels.cache.find('muck-code')) {
+                message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
+                bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => { //applied the desired marks to the posted code
+                    m.react(':white_check_mark:');
+                    m.react(':negative_squared_cross_mark:');
+                    await delay(6000);
+                    m.edit("**Muck Code:** " + code)
+                })
             }
-            message.channel.send("**"+ message.author.username +"** has posted a code, you can check it out in #muck-code")
-            bot.channels.cache.find(channel => channel.name === "muck-code").send("**New Muck Code:** "+code+"\n**Host:** "+message.author.username).then(async m => { //applied the desired marks to the posted code
-                m.react(':white_check_mark:');
-                m.react(':negative_squared_cross_mark:');
-                await delay(6000);
-                m.edit("**Muck Code:** " + code)
-            })
         } catch (e) {
             return;
         }
@@ -70,6 +78,15 @@ bot.on("message", async message => {
             .addField("Avaliable cmds", "```steam, help, code```")
 
         message.channel.send(embed)
+    } else if(command == "invite") {
+        let inviteServer = new disbut.MessageButton()
+            .setStyle('url')
+            .setURL('https://discord.com/api/oauth2/authorize?client_id=860157415600291850&permissions=4294963191&scope=bot')
+            .setLabel("invite")
+        
+        message.channel.send("Invite Muck Bot to your own server(s)", inviteServer);
+
+        
     }
 });
 
