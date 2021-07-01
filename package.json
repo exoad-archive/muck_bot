@@ -10,5 +10,8 @@
     "muck"
   ],
   "author": "",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^12.5.3"
+  }
 }
