@@ -1,3 +1,8 @@
+/*
+ * TODO: Add a action listener and command handlers 
+ * TODO: Add an event listener for things like statuses and stuff
+ */
+
 import { randomMuck, tokenCall } from "./mdl/readers.mjs";
 import { Client, Message, MessageEmbed } from "discord.js";
 import colors from "colors";
