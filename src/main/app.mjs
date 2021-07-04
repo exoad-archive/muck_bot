@@ -3,7 +3,8 @@
  * TODO: Add an event listener for things like statuses and stuff
  */
 
-import { randomMuck, tokenCall } from "./mdl/readers.mjs";
+import { randomMuck, tokenCall,  returncontext } from "./mdl/readers.mjs";
+import cfg from "./mdl/cfg.mjs";
 import { Client, Message, MessageEmbed } from "discord.js";
 import colors from "colors";
 import read from "read-file";
@@ -90,8 +91,9 @@ bot.on("message", async message => {
             .setLabel("invite")
         
         message.channel.send("Invite Muck Bot to your own server(s)", inviteServer);
-
-        
+    }
+    if(message.content == returncontext(3)) {
+        message.channel.send(returncontext(3));
     }
 });
 

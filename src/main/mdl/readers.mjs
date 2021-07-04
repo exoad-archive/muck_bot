@@ -24,3 +24,10 @@ export function noCall() {
     ];
     return arr[Math.floor(Math.random()*arr.length)];
 }
+
+export function returncontext(y) {
+    if(y == 3) {
+        return "hop on muck"
+    }
+    return ""
+}
